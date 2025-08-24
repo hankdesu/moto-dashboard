@@ -1,5 +1,6 @@
 node_modules
 references
+.editorconfig
 
 # Output
 .output

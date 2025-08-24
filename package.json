@@ -46,6 +46,7 @@
 		]
 	},
 	"dependencies": {
+		"@supabase/supabase-js": "^2.56.0",
 		"daisyui": "^5.0.50"
 	}
 }
