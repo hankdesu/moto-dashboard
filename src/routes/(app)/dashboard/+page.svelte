@@ -9,18 +9,16 @@
 
   let { data }: PageProps = $props();
   let formMethods: FormMethods | undefined = $state();
-  let mode = $state(0);
   let filterOptions = $state({ type: '', searchText: '' });
   let editId: number | null = $state(null);
-  let modal: HTMLDialogElement;
-  let filteredMotorcycles = $state(data.motorcycles);
-
-  $effect(() => {
-    filteredMotorcycles = data.motorcycles;
+  let mode = $derived.by(() => {
+    if (editId) return 2;
+    return 1;
   });
+  let modal: HTMLDialogElement;
+  let filteredMotorcycles = $derived(data.motorcycles);
 
   function handleAddClick() {
-    mode = 1;
     editId = null;
     modal.showModal();
 
@@ -30,7 +28,6 @@
   }
 
   async function handleEditClick(id: number) {
-    mode = 2;
     editId = id;
     modal.showModal();
 
@@ -44,7 +41,6 @@
 
   function handleCancel() {
     modal.close();
-    mode = 0;
     editId = null;
   }
 
@@ -121,7 +117,6 @@
       if (result?.error) throw result.error;
 
       modal.close();
-      mode = 0;
       editId = null;
 
       if (formMethods) {
