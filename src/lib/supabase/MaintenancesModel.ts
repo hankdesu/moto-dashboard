@@ -4,7 +4,7 @@ interface Maintenance {
   id: number;
   motorcycle_id: number;
   maintenance_date: Date;
-  maintenance_items: JSON;
+  maintenance_items: string;
   mileage: number;
   price: number;
 }
@@ -15,7 +15,10 @@ class MaintenacesModel extends Model<Maintenance> {
   }
 
   async findById(id: string) {
-    const { data } = await this.select({ conditions: [['motorcycle_id', `${id}`]] });
+    const { data } = await this.select({
+      conditions: [['motorcycle_id', `${id}`]],
+      order: ['id', { ascending: false }]
+    });
 
     return data;
   }
