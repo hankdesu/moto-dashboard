@@ -192,7 +192,7 @@
   </div>
 </div>
 
-<dialog id="my_modal_1" class="modal" bind:this={modal}>
+<dialog class="modal" bind:this={modal}>
   <div class="modal-box">
     <h3 class="text-lg font-bold">
       {#if mode === 1}

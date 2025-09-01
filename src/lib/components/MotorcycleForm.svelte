@@ -31,7 +31,6 @@
         form.reset();
       }
     },
-
     getFormData: () => {
       if (!form) return null;
 
@@ -46,8 +45,7 @@
         rear_tire_pressure: Number(formData.get('rear_tire_pressure'))
       };
     },
-
-    setFormData: (data: Partial<MotorcycleData>) => {
+    setFormData: (data) => {
       if (!form) return;
 
       Object.entries(data).forEach(([key, value]) => {
