@@ -9,23 +9,33 @@
   const today = new Date();
   const formattedToday = format(today, 'yyyy-MM-dd');
   const initialFormData = {
-    mode: 1,
     maintenance_items: [{ price: null, value: '' }],
     mileage: 0,
-    maintenance_date: formattedToday
+    maintenance_date: formattedToday,
+    total_price: 0
   };
   let { data } = $props();
+  let mode = $state(1);
   let formData = $state({
-    mode: 1,
     maintenance_items: [{ price: null, value: '' }],
     mileage: 0,
-    maintenance_date: formattedToday
+    maintenance_date: formattedToday,
+    total_price: 0
   });
+  let deletedIds = $state<number[]>([]);
+  let isAllDeleted = $derived(deletedIds.length === data.maintenances.length);
+  let isIndeterminated = $derived(
+    deletedIds.length > 0 && deletedIds.length < data.maintenances.length
+  );
   let form;
   let modal: HTMLDialogElement;
 
   function handleAddClick() {
     modal.showModal();
+  }
+
+  function toggleDelete() {
+    mode = mode === -1 ? 1 : -1;
   }
 
   async function handleSubmit(e: SubmitEvent) {
@@ -37,16 +47,18 @@
         motorcycle_id: data.id,
         maintenance_items: JSON.stringify(formData.maintenance_items),
         mileage: formData.mileage,
-        maintenance_date: formattedToday
+        maintenance_date: formattedToday,
+        total_price: formData.total_price
       };
 
       let result;
-      if (formData.mode === 1) {
+      if (mode === 1) {
         result = await maintenancesModel.insert(insertData);
       }
 
       modal.close();
       formData = { ...initialFormData };
+      mode = 1;
       await invalidate(`maintenances:[${data.id}]`);
     } catch (error) {
       console.error('Error inserting data:', error);
@@ -56,6 +68,24 @@
   function handleCancel() {
     modal.close();
     formData = { ...initialFormData };
+  }
+
+  function isDeleted(id: number) {
+    return deletedIds.includes(id);
+  }
+
+  function handleChange(id: number) {
+    deletedIds = isDeleted(id)
+      ? deletedIds.filter((deletedId) => deletedId !== id)
+      : [...deletedIds, id];
+  }
+
+  function handleChangeAll(e: Event & { currentTarget: HTMLInputElement }) {
+    if (e.currentTarget.checked) {
+      deletedIds = data.maintenances.map(({ id }) => id);
+    } else {
+      deletedIds = [];
+    }
   }
 
   function addItem(e: MouseEvent) {
@@ -70,7 +100,10 @@
   <div class="card bg-neutral">
     <div class="card-body flex flex-row justify-between">
       <h1 class="card-title text-primary">保養紀錄</h1>
-      <button class="btn btn-outline btn-primary" onclick={handleAddClick}>新增資料</button>
+      <div class="flex gap-5">
+        <button class="btn btn-outline btn-primary" onclick={handleAddClick}>新增資料</button>
+        <button class="btn btn-outline btn-error" onclick={toggleDelete}>刪除資料</button>
+      </div>
     </div>
   </div>
   <div>
@@ -83,6 +116,17 @@
     <table class="table">
       <thead>
         <tr>
+          {#if mode === -1}
+            <th class="w-[40px]">
+              <input
+                type="checkbox"
+                class="checkbox checkbox-error"
+                checked={isAllDeleted}
+                indeterminate={isIndeterminated}
+                onchange={handleChangeAll}
+              />
+            </th>
+          {/if}
           <th>編號</th>
           <th>保養項目</th>
           <th>里程數</th>
@@ -93,7 +137,19 @@
       <tbody>
         {#each data.maintenances as maintenance, index}
           <tr>
-            <th>{index + 1}</th>
+            {#if mode === -1}
+              <th class="w-[40px]">
+                <input
+                  type="checkbox"
+                  class="checkbox checkbox-error"
+                  checked={isDeleted(maintenance.id)}
+                  onchange={() => handleChange(maintenance.id)}
+                />
+              </th>
+            {/if}
+            <th>
+              {index + 1}
+            </th>
             <td>
               {#each maintenance.maintenance_items as item}
                 <span>{item.value}: ${item.price}</span><br />
@@ -101,7 +157,7 @@
             </td>
             <td>{maintenance.mileage}</td>
             <td>{maintenance.maintenance_date}</td>
-            <td>{maintenance.price}</td>
+            <td>$ {maintenance.total_price}</td>
             <!-- <td class="space-x-2">
               <button class="btn btn-secondary" onclick={() => handleEditClick(motorcycle.id)}>
                 編輯
@@ -121,9 +177,9 @@
 <dialog class="modal" bind:this={modal}>
   <div class="modal-box">
     <h3 class="text-lg font-bold">
-      {#if formData.mode === 1}
+      {#if mode === 1}
         新增資料
-      {:else if formData.mode === 2}
+      {:else if mode === 2}
         編輯資料
       {/if}
     </h3>
@@ -186,6 +242,15 @@
             id="maintenance_date"
             name="maintenance_date"
             bind:value={formData.maintenance_date}
+          />
+        </label>
+        <label class="input w-full">
+          <span class="label">保養總價(含工本費)</span>
+          <input
+            type="number"
+            id="total_price"
+            name="total_price"
+            bind:value={formData.total_price}
           />
         </label>
       </fieldset>

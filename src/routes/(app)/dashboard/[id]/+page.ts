@@ -2,22 +2,38 @@ import { format } from 'date-fns';
 
 import type { PageLoad } from './$types';
 
-import MaintenacesModel from '$lib/supabase/MaintenancesModel';
+import MaintenacesModel, { type Maintenance } from '$lib/supabase/MaintenancesModel';
+
+interface ParsedMaintenance extends Omit<Maintenance, 'maintenance_items' | 'maintenance_date'> {
+  maintenance_date: string;
+  maintenance_items: { value: ''; price: string }[];
+  total_price: number;
+}
 
 export const load: PageLoad = async ({ params, depends }) => {
   const { id } = params;
   depends(`maintenances:[${id}]`);
   const maintenacesModel = new MaintenacesModel();
   const maintenances = await maintenacesModel.findById(id);
-  const parsedMaintenances = maintenances?.map((maintenance) => {
-    const parsedItems = JSON.parse(maintenance.maintenance_items) || [];
-    const price = parsedItems.reduce((acc: number, cur: { price: string }) => (acc += Number(cur.price)), 0);
-    return {
-      ...maintenance,
-      maintenance_items: parsedItems,
-      maintenance_date: format(maintenance.maintenance_date, 'yyyy-MM-dd'),
-      price
+  const parsedMaintenances: ParsedMaintenance[] = maintenances?.map((maintenance) => {
+    let formattedData: ParsedMaintenance = {
+      id: maintenance.id,
+      motorcycle_id: maintenance.motorcycle_id,
+      mileage: maintenance.mileage,
+      maintenance_date: format(new Date(maintenance.maintenance_date), 'yyyy-MM-dd'),
+      maintenance_items: [],
+      total_price: maintenance.total_price
     };
+    try {
+      const parsedItems = JSON.parse(maintenance.maintenance_items) || [];
+      formattedData = {
+        ...formattedData,
+        maintenance_items: parsedItems
+      };
+    } catch (error) {
+      console.error(error);
+    }
+    return formattedData;
   });
 
   return { id, maintenances: parsedMaintenances || [] };

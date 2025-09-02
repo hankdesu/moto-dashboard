@@ -1,12 +1,12 @@
 import Model from './Model';
 
-interface Maintenance {
+export interface Maintenance {
   id: number;
   motorcycle_id: number;
   maintenance_date: Date;
   maintenance_items: string;
   mileage: number;
-  price: number;
+  total_price: number;
 }
 
 class MaintenacesModel extends Model<Maintenance> {
@@ -20,7 +20,7 @@ class MaintenacesModel extends Model<Maintenance> {
       order: ['id', { ascending: false }]
     });
 
-    return data;
+    return data ?? [];
   }
 }
 
