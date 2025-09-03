@@ -35,7 +35,12 @@
   }
 
   function toggleDelete() {
-    mode = mode === -1 ? 1 : -1;
+    if (mode === -1) {
+      deletedIds = [];
+      mode = 1;
+    } else {
+      mode = -1;
+    }
   }
 
   async function handleSubmit(e: SubmitEvent) {
@@ -59,6 +64,21 @@
       modal.close();
       formData = { ...initialFormData };
       mode = 1;
+      await invalidate(`maintenances:[${data.id}]`);
+    } catch (error) {
+      console.error('Error inserting data:', error);
+    }
+  }
+
+  async function handleDelete(e: Event) {
+    e.preventDefault();
+
+    const maintenanceModel = new MaintenacesModel();
+    try {
+      await maintenanceModel.deleteByIds(deletedIds);
+
+      toggleDelete();
+
       await invalidate(`maintenances:[${data.id}]`);
     } catch (error) {
       console.error('Error inserting data:', error);
@@ -158,20 +178,22 @@
             <td>{maintenance.mileage}</td>
             <td>{maintenance.maintenance_date}</td>
             <td>$ {maintenance.total_price}</td>
-            <!-- <td class="space-x-2">
-              <button class="btn btn-secondary" onclick={() => handleEditClick(motorcycle.id)}>
+            <td class="space-x-2">
+              <button class="btn btn-secondary">
                 編輯
               </button>
-              <button
-                class="btn btn-accent"
-                onclick={async () => await goto(`/dashboard/${motorcycle.id}`)}>保養紀錄</button
-              >
-            </td> -->
+            </td>
           </tr>
         {/each}
       </tbody>
     </table>
   </div>
+  {#if mode === -1}
+  <div class="flex justify-end gap-3">
+    <button class="btn btn-error" onclick={toggleDelete}>取消刪除</button>
+    <button class="btn btn-success" onclick={handleDelete}>確認刪除</button>
+  </div>
+  {/if}
 </div>
 
 <dialog class="modal" bind:this={modal}>

@@ -22,6 +22,14 @@ class MaintenacesModel extends Model<Maintenance> {
 
     return data ?? [];
   }
+
+  async deleteByIds(ids: number[]) {
+    const { data, error } = await this.delete({ column: 'id', value: ids });
+
+    if (error) return null;
+
+    return data;
+  }
 }
 
 export default MaintenacesModel;

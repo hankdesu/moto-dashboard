@@ -57,6 +57,19 @@ class Model<T> {
     }
     return { data, error };
   }
+
+  async delete(conditions: { column: string; value: number[] | string[] }) {
+    const { data, error } = await this.supabase
+      .from(this.table)
+      .delete()
+      .in(conditions.column, conditions.value);
+
+    if (error) {
+      console.error(`Error[${error.code}]: ${error.message}`);
+    }
+
+    return { data, error };
+  }
 }
 
 export default Model;
