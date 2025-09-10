@@ -10,8 +10,6 @@
   async function login(e: SubmitEvent) {
     e.preventDefault();
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    console.log('data: ', data);
-    console.log('error: ', error);
 
     if (!error) {
       await goto('/dashboard');
