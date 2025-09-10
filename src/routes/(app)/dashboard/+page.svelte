@@ -176,14 +176,16 @@
             <td>{motorcycle.engine_number}</td>
             <td>{motorcycle.front_tire_pressure}</td>
             <td>{motorcycle.rear_tire_pressure}</td>
-            <td class="space-x-2">
-              <button class="btn btn-secondary" onclick={() => handleEditClick(motorcycle.id)}>
-                編輯
-              </button>
-              <button
-                class="btn btn-accent"
-                onclick={async () => await goto(`/dashboard/${motorcycle.id}`)}>保養紀錄</button
-              >
+            <td>
+              <div class="flex gap-2 flex-wrap">
+                <button class="btn btn-secondary" onclick={() => handleEditClick(motorcycle.id)}>
+                  編輯
+                </button>
+                <button
+                  class="btn btn-accent"
+                  onclick={async () => await goto(`/dashboard/${motorcycle.id}`)}>保養紀錄</button
+                >
+              </div>
             </td>
           </tr>
         {/each}
