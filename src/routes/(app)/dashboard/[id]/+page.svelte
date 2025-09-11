@@ -5,24 +5,33 @@
   import LeftChevron from '$lib/icons/LeftChevron.svelte';
   import Plus from '$lib/icons/Plus.svelte';
   import MaintenacesModel from '$lib/supabase/MaintenancesModel';
+  import * as FORM_STATE from '$lib/constants/formState';
+
+  interface FormDataType {
+    maintenance_items: { value: string; price: null | string }[];
+    mileage: null | number;
+    maintenance_date: string;
+    total_price: null | number;
+  }
 
   const today = new Date();
   const formattedToday = format(today, 'yyyy-MM-dd');
-  const initialFormData = {
+  const initialFormData: FormDataType = {
     maintenance_items: [{ price: null, value: '' }],
-    mileage: 0,
+    mileage: null,
     maintenance_date: formattedToday,
-    total_price: 0
+    total_price: null
   };
   let { data } = $props();
-  let mode = $state(1);
-  let formData = $state({
+  let formState = $state(FORM_STATE.INITIAL);
+  let formData = $state<FormDataType>({
     maintenance_items: [{ price: null, value: '' }],
-    mileage: 0,
+    mileage: null,
     maintenance_date: formattedToday,
-    total_price: 0
+    total_price: null
   });
   let deletedIds = $state<number[]>([]);
+  let editId = $state(0);
   let isAllDeleted = $derived(deletedIds.length === data.maintenances.length);
   let isIndeterminated = $derived(
     deletedIds.length > 0 && deletedIds.length < data.maintenances.length
@@ -31,15 +40,38 @@
   let modal: HTMLDialogElement;
 
   function handleAddClick() {
+    formState = FORM_STATE.ADD;
     modal.showModal();
   }
 
+  function handleEditClick(id: number) {
+    formState = FORM_STATE.EDIT;
+    const maintenance = data.maintenances.find((maintenance) => maintenance.id === id);
+
+    if (!maintenance) return;
+
+    editId = maintenance.id;
+    formData = {
+      ...initialFormData,
+      maintenance_items: maintenance.maintenance_items,
+      mileage: maintenance.mileage,
+      maintenance_date: maintenance.maintenance_date,
+      total_price: maintenance.total_price
+    };
+    modal.showModal();
+  }
+
+  function resetFormData() {
+    formData = { ...initialFormData };
+    editId = 0;
+  }
+
   function toggleDelete() {
-    if (mode === -1) {
+    if (formState === FORM_STATE.DELETE) {
       deletedIds = [];
-      mode = 1;
+      formState = FORM_STATE.INITIAL;
     } else {
-      mode = -1;
+      formState = FORM_STATE.DELETE;
     }
   }
 
@@ -48,22 +80,28 @@
 
     const maintenancesModel = new MaintenacesModel();
     try {
-      const insertData = {
-        motorcycle_id: data.id,
-        maintenance_items: JSON.stringify(formData.maintenance_items),
-        mileage: formData.mileage,
-        maintenance_date: formattedToday,
-        total_price: formData.total_price
-      };
-
       let result;
-      if (mode === 1) {
+      if (formState === FORM_STATE.ADD) {
+        const insertData = {
+          motorcycle_id: data.id,
+          maintenance_items: JSON.stringify(formData.maintenance_items),
+          mileage: formData.mileage,
+          maintenance_date: formData.maintenance_date,
+          total_price: formData.total_price
+        };
         result = await maintenancesModel.insert(insertData);
+      } else if (formState === FORM_STATE.EDIT) {
+        const updateData = {
+          maintenance_items: JSON.stringify(formData.maintenance_items),
+          mileage: formData.mileage,
+          maintenance_date: formData.maintenance_date,
+          total_price: formData.total_price
+        };
+        result = await maintenancesModel.updateById(editId, updateData);
       }
 
       modal.close();
-      formData = { ...initialFormData };
-      mode = 1;
+      formState = FORM_STATE.INITIAL;
       await invalidate(`maintenances:[${data.id}]`);
     } catch (error) {
       console.error('Error inserting data:', error);
@@ -87,7 +125,7 @@
 
   function handleCancel() {
     modal.close();
-    formData = { ...initialFormData };
+    formState = FORM_STATE.INITIAL;
   }
 
   function isDeleted(id: number) {
@@ -136,7 +174,7 @@
     <table class="table">
       <thead>
         <tr>
-          {#if mode === -1}
+          {#if formState === FORM_STATE.DELETE}
             <th class="w-[40px]">
               <input
                 type="checkbox"
@@ -157,7 +195,7 @@
       <tbody>
         {#each data.maintenances as maintenance, index}
           <tr>
-            {#if mode === -1}
+            {#if formState === FORM_STATE.DELETE}
               <th class="w-[40px]">
                 <input
                   type="checkbox"
@@ -179,7 +217,7 @@
             <td>{maintenance.maintenance_date}</td>
             <td>$ {maintenance.total_price}</td>
             <td class="space-x-2">
-              <button class="btn btn-secondary">
+              <button class="btn btn-secondary" onclick={() => handleEditClick(maintenance.id)}>
                 編輯
               </button>
             </td>
@@ -188,20 +226,20 @@
       </tbody>
     </table>
   </div>
-  {#if mode === -1}
-  <div class="flex justify-end gap-3">
-    <button class="btn btn-error" onclick={toggleDelete}>取消刪除</button>
-    <button class="btn btn-success" onclick={handleDelete}>確認刪除</button>
-  </div>
+  {#if formState === FORM_STATE.DELETE}
+    <div class="flex justify-end gap-3">
+      <button class="btn btn-error" onclick={toggleDelete}>取消刪除</button>
+      <button class="btn btn-success" onclick={handleDelete}>確認刪除</button>
+    </div>
   {/if}
 </div>
 
-<dialog class="modal" bind:this={modal}>
+<dialog class="modal" bind:this={modal} onclose={resetFormData}>
   <div class="modal-box">
     <h3 class="text-lg font-bold">
-      {#if mode === 1}
+      {#if formState === FORM_STATE.ADD}
         新增資料
-      {:else if mode === 2}
+      {:else if formState === FORM_STATE.EDIT}
         編輯資料
       {/if}
     </h3>

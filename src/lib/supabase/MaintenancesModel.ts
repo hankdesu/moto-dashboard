@@ -17,10 +17,21 @@ class MaintenacesModel extends Model<Maintenance> {
   async findById(id: string) {
     const { data } = await this.select({
       conditions: [['motorcycle_id', `${id}`]],
-      order: ['id', { ascending: false }]
+      order: ['maintenance_date', { ascending: false }]
     });
 
     return data ?? [];
+  }
+
+  async updateById(
+    id: number,
+    updateData: Partial<Omit<Maintenance, 'maintenance_date' | 'mileage' | 'total_price'>>
+  ) {
+    const { data, error } = await this.update(updateData, [['id', `${id}`]]);
+
+    if (error) return null;
+
+    return data;
   }
 
   async deleteByIds(ids: number[]) {
