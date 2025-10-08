@@ -8,6 +8,7 @@
   import * as FORM_STATE from '$lib/constants/formState';
 
   interface FormDataType {
+    id?: number | null;
     maintenance_items: { value: string; price: null | string }[];
     mileage: null | number;
     maintenance_date: string;
@@ -31,7 +32,6 @@
     total_price: null
   });
   let deletedIds = $state<number[]>([]);
-  let editId = $state(0);
   let isAllDeleted = $derived(deletedIds.length === data.maintenances.length);
   let isIndeterminated = $derived(
     deletedIds.length > 0 && deletedIds.length < data.maintenances.length
@@ -50,9 +50,9 @@
 
     if (!maintenance) return;
 
-    editId = maintenance.id;
     formData = {
       ...initialFormData,
+      id: maintenance.id,
       maintenance_items: maintenance.maintenance_items,
       mileage: maintenance.mileage,
       maintenance_date: maintenance.maintenance_date,
@@ -63,7 +63,6 @@
 
   function resetFormData() {
     formData = { ...initialFormData };
-    editId = 0;
   }
 
   function toggleDelete() {
@@ -90,14 +89,14 @@
           total_price: formData.total_price
         };
         result = await maintenancesModel.insert(insertData);
-      } else if (formState === FORM_STATE.EDIT) {
+      } else if (formState === FORM_STATE.EDIT && formData.id) {
         const updateData = {
           maintenance_items: JSON.stringify(formData.maintenance_items),
           mileage: formData.mileage,
           maintenance_date: formData.maintenance_date,
           total_price: formData.total_price
         };
-        result = await maintenancesModel.updateById(editId, updateData);
+        result = await maintenancesModel.updateById(formData.id, updateData);
       }
 
       modal.close();
