@@ -7,8 +7,8 @@ export interface Motorcycle {
   owner_tel: string;
   model: string;
   engine_number: string;
-  front_tire_pressure: number;
-  rear_tire_pressure: number;
+  front_tire_pressure: number | null;
+  rear_tire_pressure: number | null;
 }
 
 class MotorCyclesModel extends Model<Motorcycle> {
@@ -36,6 +36,14 @@ class MotorCyclesModel extends Model<Motorcycle> {
 
   async updateById(id: number, updateData: Partial<Motorcycle>) {
     const { data, error } = await this.update(updateData, [['id', `${id}`]]);
+
+    if (error) return null;
+
+    return data;
+  }
+
+  async deleteByIds(ids: number[]) {
+    const { data, error } = await this.delete({ column: 'id', value: ids });
 
     if (error) return null;
 
