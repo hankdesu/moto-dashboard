@@ -6,6 +6,7 @@
   import Plus from '$lib/icons/Plus.svelte';
   import MaintenacesModel from '$lib/supabase/MaintenancesModel';
   import * as FORM_STATE from '$lib/constants/formState';
+  import Pagination from '$lib/components/Pagination.svelte';
 
   interface FormDataType {
     id?: number | null;
@@ -25,12 +26,7 @@
   };
   let { data } = $props();
   let formState = $state(FORM_STATE.INITIAL);
-  let formData = $state<FormDataType>({
-    maintenance_items: [{ price: null, value: '' }],
-    mileage: null,
-    maintenance_date: formattedToday,
-    total_price: null
-  });
+  let formData = $state<FormDataType>({ ...initialFormData });
   let deletedIds = $state<number[]>([]);
   let isAllDeleted = $derived(deletedIds.length === data.maintenances.length);
   let isIndeterminated = $derived(
@@ -38,6 +34,14 @@
   );
   let form;
   let modal: HTMLDialogElement;
+  let currentPage = $state(1);
+  let dataSlice = $derived.by(() => {
+    const start = currentPage * 10 - 10;
+    const end = currentPage * 10;
+
+    return data.maintenances.slice(start, end);
+  });
+  let totalPages = $derived(Math.ceil(data.maintenances.length / 10));
 
   function handleAddClick() {
     formState = FORM_STATE.ADD;
@@ -118,7 +122,7 @@
 
       await invalidate(`maintenances:[${data.id}]`);
     } catch (error) {
-      console.error('Error inserting data:', error);
+      console.error('Error deleting data: ', error);
     }
   }
 
@@ -154,7 +158,7 @@
 </script>
 
 <div class="flex w-full flex-col gap-10 p-10">
-  <div class="card bg-neutral">
+  <div class="card-border card bg-base-100 shadow-sm">
     <div class="card-body flex flex-row justify-between">
       <h1 class="card-title text-primary">保養紀錄</h1>
       <div class="flex gap-5">
@@ -192,7 +196,7 @@
         </tr>
       </thead>
       <tbody>
-        {#each data.maintenances as maintenance, index}
+        {#each dataSlice as maintenance, index}
           <tr>
             {#if formState === FORM_STATE.DELETE}
               <th class="w-[40px]">
@@ -231,6 +235,9 @@
       <button class="btn btn-success" onclick={handleDelete}>確認刪除</button>
     </div>
   {/if}
+  <div class="flex w-full justify-center">
+    <Pagination {totalPages} bind:currentPage />
+  </div>
 </div>
 
 <dialog class="modal" bind:this={modal} onclose={resetFormData}>
