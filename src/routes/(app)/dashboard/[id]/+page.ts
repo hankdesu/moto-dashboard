@@ -6,7 +6,7 @@ import MaintenacesModel, { type Maintenance } from '$lib/supabase/MaintenancesMo
 
 interface ParsedMaintenance extends Omit<Maintenance, 'maintenance_items' | 'maintenance_date'> {
   maintenance_date: string;
-  maintenance_items: { value: ''; price: string }[];
+  maintenance_items: { value: ''; price: string, other?: string }[];
   total_price: number;
 }
 

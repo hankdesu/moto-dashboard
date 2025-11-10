@@ -7,10 +7,11 @@
   import MaintenacesModel from '$lib/supabase/MaintenancesModel';
   import * as FORM_STATE from '$lib/constants/formState';
   import Pagination from '$lib/components/Pagination.svelte';
+  import { FORM_OPTIONS } from '$lib/constants/costant.js';
 
   interface FormDataType {
     id?: number | null;
-    maintenance_items: { value: string; price: null | string }[];
+    maintenance_items: { value: string; price: null | string; other?: string }[];
     mileage: null | number;
     maintenance_date: string;
     total_price: null | number;
@@ -19,7 +20,7 @@
   const today = new Date();
   const formattedToday = format(today, 'yyyy-MM-dd');
   const initialFormData: FormDataType = {
-    maintenance_items: [{ price: null, value: '' }],
+    maintenance_items: [{ price: null, value: '', other: '' }],
     mileage: null,
     maintenance_date: formattedToday,
     total_price: null
@@ -84,10 +85,14 @@
     const maintenancesModel = new MaintenacesModel();
     try {
       let result;
+      const validatedItems = formData.maintenance_items.map((item) => ({
+        ...item,
+        other: item.value === FORM_OPTIONS.OTHER ? item.other : ''
+      }));
       if (formState === FORM_STATE.ADD) {
         const insertData = {
           motorcycle_id: data.id,
-          maintenance_items: JSON.stringify(formData.maintenance_items),
+          maintenance_items: JSON.stringify(validatedItems),
           mileage: formData.mileage,
           maintenance_date: formData.maintenance_date,
           total_price: formData.total_price
@@ -95,7 +100,7 @@
         result = await maintenancesModel.insert(insertData);
       } else if (formState === FORM_STATE.EDIT && formData.id) {
         const updateData = {
-          maintenance_items: JSON.stringify(formData.maintenance_items),
+          maintenance_items: JSON.stringify(validatedItems),
           mileage: formData.mileage,
           maintenance_date: formData.maintenance_date,
           total_price: formData.total_price
@@ -152,7 +157,7 @@
   function addItem(e: MouseEvent) {
     e.preventDefault();
 
-    const item = { price: null, value: '' };
+    const item = { price: null, value: '', other: '' };
     formData.maintenance_items.push(item);
   }
 </script>
@@ -213,7 +218,11 @@
             </th>
             <td>
               {#each maintenance.maintenance_items as item}
-                <span>{item.value}: ${item.price}</span><br />
+                {#if item.other}
+                  <span>{item.other}: ${item.price}</span><br />
+                {:else}
+                  <span>{item.value}: ${item.price}</span><br />
+                {/if}
               {/each}
             </td>
             <td>{maintenance.mileage}</td>
@@ -261,7 +270,7 @@
           </button>
         </div>
         {#each formData.maintenance_items as item}
-          <div class="flex gap-5">
+          <div class={`flex gap-5 ${item.value === '其他' ? 'flex-col' : ''}`}>
             <select
               class="select"
               id="maintenance_item_name"
@@ -286,15 +295,37 @@
               <option value="滑鍵">滑鍵</option>
               <option value="離合器">離合器</option>
               <option value="開閉盤">開閉盤</option>
+              <option value="其他">其他</option>
             </select>
-            <input
-              type="number"
-              id="maintenance_item_price"
-              name="maintenance_item_price"
-              class="input"
-              placeholder="請輸入價格"
-              bind:value={item.price}
-            />
+            {#if item.value === '其他'}
+              <div class="flex gap-5">
+                <input
+                  type="text"
+                  id="maintenance_item_other"
+                  name="maintenance_item_other"
+                  class="input"
+                  placeholder="請輸入名稱"
+                  bind:value={item.other}
+                />
+                <input
+                  type="number"
+                  id="maintenance_item_price"
+                  name="maintenance_item_price"
+                  class="input"
+                  placeholder="請輸入價格"
+                  bind:value={item.price}
+                />
+              </div>
+            {:else}
+              <input
+                type="number"
+                id="maintenance_item_price"
+                name="maintenance_item_price"
+                class="input"
+                placeholder="請輸入價格"
+                bind:value={item.price}
+              />
+            {/if}
           </div>
         {/each}
         <label class="input w-full">
