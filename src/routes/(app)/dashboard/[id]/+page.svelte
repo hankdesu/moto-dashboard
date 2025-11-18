@@ -11,7 +11,7 @@
 
   interface FormDataType {
     id?: number | null;
-    maintenance_items: { value: string; price: null | string; other?: string }[];
+    maintenance_items: { value: string; price: null | string; isOther?: boolean }[];
     mileage: null | number;
     maintenance_date: string;
     total_price: null | number;
@@ -20,7 +20,7 @@
   const today = new Date();
   const formattedToday = format(today, 'yyyy-MM-dd');
   const initialFormData: FormDataType = {
-    maintenance_items: [{ price: null, value: '', other: '' }],
+    maintenance_items: [{ price: null, value: '', isOther: false }],
     mileage: null,
     maintenance_date: formattedToday,
     total_price: null
@@ -85,10 +85,7 @@
     const maintenancesModel = new MaintenacesModel();
     try {
       let result;
-      const validatedItems = formData.maintenance_items.map((item) => ({
-        ...item,
-        other: item.value === FORM_OPTIONS.OTHER ? item.other : ''
-      }));
+      const validatedItems = formData.maintenance_items.map((item) => ({ ...item }));
       if (formState === FORM_STATE.ADD) {
         const insertData = {
           motorcycle_id: data.id,
@@ -160,6 +157,13 @@
     const item = { price: null, value: '', other: '' };
     formData.maintenance_items.push(item);
   }
+
+  function addOtherItem(e: MouseEvent) {
+    e.preventDefault();
+
+    const item = { price: null, value: '', isOther: true };
+    formData.maintenance_items.push(item);
+  }
 </script>
 
 <div class="flex w-full flex-col gap-10 p-10">
@@ -218,11 +222,7 @@
             </th>
             <td>
               {#each maintenance.maintenance_items as item}
-                {#if item.other}
-                  <span>{item.other}: ${item.price}</span><br />
-                {:else}
-                  <span>{item.value}: ${item.price}</span><br />
-                {/if}
+                <span>{item.value}: ${item.price}</span><br />
               {/each}
             </td>
             <td>{maintenance.mileage}</td>
@@ -260,7 +260,7 @@
     </h3>
     <form onsubmit={handleSubmit} bind:this={form}>
       <fieldset class="my-5 fieldset gap-5">
-        <div class="flex items-center">
+        <div class="flex items-center gap-4">
           <legend class="fieldset-legend px-3 text-base">保養項目</legend>
           <button
             type="button"
@@ -268,36 +268,16 @@
             onclick={addItem}
             ><Plus className="w-4 h-4" />
           </button>
+          <button
+            type="button"
+            class="btn btn-circle btn-outline btn-sm btn-secondary"
+            onclick={addOtherItem}
+            ><Plus className="w-4 h-4" />
+          </button>
         </div>
         {#each formData.maintenance_items as item}
           <div class={`flex gap-5 ${item.value === '其他' ? 'flex-col' : ''}`}>
-            <select
-              class="select"
-              id="maintenance_item_name"
-              name="maintenance_item_name"
-              bind:value={item.value}
-            >
-              <option disabled selected>請選擇保養項目</option>
-              <option value="機油">機油</option>
-              <option value="齒輪油">齒輪油</option>
-              <option value="空氣濾清器">空氣濾清器</option>
-              <option value="電池">電池</option>
-              <option value="前外胎">前外胎</option>
-              <option value="後外胎">後外胎</option>
-              <option value="前煞車皮">前煞車皮</option>
-              <option value="後煞車皮">後煞車皮</option>
-              <option value="火星塞">火星塞</option>
-              <option value="煞車油">煞車油</option>
-              <option value="傳動皮帶">傳動皮帶</option>
-              <option value="普利盤">普利盤</option>
-              <option value="風葉盤">風葉盤</option>
-              <option value="普利珠">普利珠</option>
-              <option value="滑鍵">滑鍵</option>
-              <option value="離合器">離合器</option>
-              <option value="開閉盤">開閉盤</option>
-              <option value="其他">其他</option>
-            </select>
-            {#if item.value === '其他'}
+            {#if item.isOther}
               <div class="flex gap-5">
                 <input
                   type="text"
@@ -305,7 +285,7 @@
                   name="maintenance_item_other"
                   class="input"
                   placeholder="請輸入名稱"
-                  bind:value={item.other}
+                  bind:value={item.value}
                 />
                 <input
                   type="number"
@@ -317,6 +297,31 @@
                 />
               </div>
             {:else}
+              <select
+                class="select"
+                id="maintenance_item_name"
+                name="maintenance_item_name"
+                bind:value={item.value}
+              >
+                <option disabled selected>請選擇保養項目</option>
+                <option value="機油">機油</option>
+                <option value="齒輪油">齒輪油</option>
+                <option value="空氣濾清器">空氣濾清器</option>
+                <option value="電池">電池</option>
+                <option value="前外胎">前外胎</option>
+                <option value="後外胎">後外胎</option>
+                <option value="前煞車皮">前煞車皮</option>
+                <option value="後煞車皮">後煞車皮</option>
+                <option value="火星塞">火星塞</option>
+                <option value="煞車油">煞車油</option>
+                <option value="傳動皮帶">傳動皮帶</option>
+                <option value="普利盤">普利盤</option>
+                <option value="風葉盤">風葉盤</option>
+                <option value="普利珠">普利珠</option>
+                <option value="滑鍵">滑鍵</option>
+                <option value="離合器">離合器</option>
+                <option value="開閉盤">開閉盤</option>
+              </select>
               <input
                 type="number"
                 id="maintenance_item_price"

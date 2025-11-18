@@ -43,7 +43,7 @@
     const end = currentPage * 10;
 
     return filteredMotorcycles.slice(start, end);
-  })
+  });
   let totalPages = $derived(Math.ceil(filteredMotorcycles.length / 10));
 
   function resetFormData() {
@@ -176,7 +176,11 @@
     try {
       let result;
       if (formState === FORM_STATE.ADD) {
-        const insertData = { ...formData };
+        const insertData = {
+          ...formData,
+          front_tire_pressure: Number(formData.front_tire_pressure) || 0,
+          rear_tire_pressure: Number(formData.rear_tire_pressure) || 0
+        };
         result = await motorcyclesModel.insert(insertData);
       } else if (formState === FORM_STATE.EDIT && formData.id) {
         const updateData = {
@@ -185,8 +189,8 @@
           owner_tel: formData.owner_tel,
           model: formData.model,
           engine_number: formData.engine_number,
-          front_tire_pressure: formData.front_tire_pressure,
-          rear_tire_pressure: formData.rear_tire_pressure
+          front_tire_pressure: Number(formData.front_tire_pressure) || 0,
+          rear_tire_pressure: Number(formData.rear_tire_pressure) || 0
         };
         result = await motorcyclesModel.updateById(formData.id, updateData);
       }
@@ -204,7 +208,7 @@
 </script>
 
 <div class="flex w-full flex-col gap-10 p-10">
-  <div class="card bg-base-100 shadow-sm card-border">
+  <div class="card-border card bg-base-100 shadow-sm">
     <div class="card-body flex flex-row justify-between">
       <h1 class="card-title text-primary">車籍資料</h1>
       <div class="flex gap-5">
@@ -344,7 +348,7 @@
         <label class="input w-full">
           <span class="label">前輪胎壓(PSI)</span>
           <input
-            type="number"
+            type="text"
             id="front_tire_pressure"
             name="front_tire_pressure"
             bind:value={formData.front_tire_pressure}
@@ -353,7 +357,7 @@
         <label class="input w-full">
           <span class="label">後輪胎壓(PSI)</span>
           <input
-            type="number"
+            type="text"
             id="rear_tire_pressure"
             name="rear_tire_pressure"
             bind:value={formData.rear_tire_pressure}
