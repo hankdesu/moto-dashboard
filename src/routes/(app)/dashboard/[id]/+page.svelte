@@ -15,6 +15,7 @@
     mileage: null | number;
     maintenance_date: string;
     total_price: null | number;
+    remark: null | string;
   }
 
   const today = new Date();
@@ -23,7 +24,8 @@
     maintenance_items: [{ price: null, value: '', isOther: false }],
     mileage: null,
     maintenance_date: formattedToday,
-    total_price: null
+    total_price: null,
+    remark: null
   };
   let { data } = $props();
   let formState = $state(FORM_STATE.INITIAL);
@@ -61,7 +63,8 @@
       maintenance_items: maintenance.maintenance_items,
       mileage: maintenance.mileage,
       maintenance_date: maintenance.maintenance_date,
-      total_price: maintenance.total_price
+      total_price: maintenance.total_price,
+      remark: maintenance.remark
     };
     modal.showModal();
   }
@@ -92,7 +95,8 @@
           maintenance_items: JSON.stringify(validatedItems),
           mileage: formData.mileage,
           maintenance_date: formData.maintenance_date,
-          total_price: formData.total_price
+          total_price: formData.total_price,
+          remark: formData.remark
         };
         result = await maintenancesModel.insert(insertData);
       } else if (formState === FORM_STATE.EDIT && formData.id) {
@@ -100,7 +104,8 @@
           maintenance_items: JSON.stringify(validatedItems),
           mileage: formData.mileage,
           maintenance_date: formData.maintenance_date,
-          total_price: formData.total_price
+          total_price: formData.total_price,
+          remark: formData.remark
         };
         result = await maintenancesModel.updateById(formData.id, updateData);
       }
@@ -183,7 +188,7 @@
     </button>
   </div>
   <div class="overflow-x-auto rounded-box border border-base-content/5 bg-base-100">
-    <table class="table">
+    <table class="table table-fixed w-full">
       <thead>
         <tr>
           {#if formState === FORM_STATE.DELETE}
@@ -202,6 +207,7 @@
           <th>里程數</th>
           <th>保養日期</th>
           <th>保養總價</th>
+          <th>備註</th>
         </tr>
       </thead>
       <tbody>
@@ -228,6 +234,7 @@
             <td>{maintenance.mileage}</td>
             <td>{maintenance.maintenance_date}</td>
             <td>$ {maintenance.total_price}</td>
+            <td class="max-w-[320px] break-words">{maintenance.remark}</td>
             <td class="space-x-2">
               <button class="btn btn-secondary" onclick={() => handleEditClick(maintenance.id)}>
                 編輯
@@ -354,6 +361,10 @@
             name="total_price"
             bind:value={formData.total_price}
           />
+        </label>
+        <label class="input w-full">
+          <span class="label">備註</span>
+          <input type="text" id="remark" name="remark" bind:value={formData.remark} />
         </label>
       </fieldset>
       <div class="modal-action">

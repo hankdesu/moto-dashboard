@@ -7,6 +7,7 @@ export interface Maintenance {
   maintenance_items: string;
   mileage: number;
   total_price: number;
+  remark: string | null;
 }
 
 class MaintenacesModel extends Model<Maintenance> {

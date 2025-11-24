@@ -22,7 +22,8 @@ export const load: PageLoad = async ({ params, depends }) => {
       mileage: maintenance.mileage,
       maintenance_date: format(new Date(maintenance.maintenance_date), 'yyyy-MM-dd'),
       maintenance_items: [],
-      total_price: maintenance.total_price
+      total_price: maintenance.total_price,
+      remark: maintenance.remark
     };
     try {
       const parsedItems = JSON.parse(maintenance.maintenance_items) || [];
