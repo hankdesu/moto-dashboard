@@ -2,12 +2,12 @@
   import { format } from 'date-fns';
 
   import { invalidate } from '$app/navigation';
+  import Pagination from '$lib/components/Pagination.svelte';
+  import * as FORM_STATE from '$lib/constants/formState';
   import LeftChevron from '$lib/icons/LeftChevron.svelte';
   import Plus from '$lib/icons/Plus.svelte';
   import MaintenacesModel from '$lib/supabase/MaintenancesModel';
-  import * as FORM_STATE from '$lib/constants/formState';
-  import Pagination from '$lib/components/Pagination.svelte';
-  import { FORM_OPTIONS } from '$lib/constants/costant.js';
+  import Minus from '$lib/icons/Minus.svelte';
 
   interface FormDataType {
     id?: number | null;
@@ -169,6 +169,12 @@
     const item = { price: null, value: '', isOther: true };
     formData.maintenance_items.push(item);
   }
+
+  function deleteItem(e: MouseEvent, index: number) {
+    e.preventDefault();
+
+    formData.maintenance_items = formData.maintenance_items.filter((_, i) => i !== index);
+  }
 </script>
 
 <div class="flex w-full flex-col gap-10 p-10">
@@ -188,7 +194,7 @@
     </button>
   </div>
   <div class="overflow-x-auto rounded-box border border-base-content/5 bg-base-100">
-    <table class="table table-fixed w-full">
+    <table class="table w-full table-fixed">
       <thead>
         <tr>
           {#if formState === FORM_STATE.DELETE}
@@ -282,27 +288,25 @@
             ><Plus className="w-4 h-4" />
           </button>
         </div>
-        {#each formData.maintenance_items as item}
-          <div class={`flex gap-5 ${item.value === '其他' ? 'flex-col' : ''}`}>
+        {#each formData.maintenance_items as item, index}
+          <div class="flex w-full items-center gap-5">
             {#if item.isOther}
-              <div class="flex gap-5">
-                <input
-                  type="text"
-                  id="maintenance_item_other"
-                  name="maintenance_item_other"
-                  class="input"
-                  placeholder="請輸入名稱"
-                  bind:value={item.value}
-                />
-                <input
-                  type="number"
-                  id="maintenance_item_price"
-                  name="maintenance_item_price"
-                  class="input"
-                  placeholder="請輸入價格"
-                  bind:value={item.price}
-                />
-              </div>
+              <input
+                type="text"
+                id="maintenance_item_other"
+                name="maintenance_item_other"
+                class="input"
+                placeholder="請輸入名稱"
+                bind:value={item.value}
+              />
+              <input
+                type="number"
+                id="maintenance_item_price"
+                name="maintenance_item_price"
+                class="input"
+                placeholder="請輸入價格"
+                bind:value={item.price}
+              />
             {:else}
               <select
                 class="select"
@@ -338,6 +342,12 @@
                 bind:value={item.price}
               />
             {/if}
+            <button
+              type="button"
+              class="btn btn-circle btn-outline btn-sm btn-error"
+              onclick={(e) => deleteItem(e, index)}
+              ><Minus className="w-4 h-4" />
+            </button>
           </div>
         {/each}
         <label class="input w-full">
