@@ -3,17 +3,26 @@
   import UserIcon from '$lib/icons/UserIcon.svelte';
   import LockIcon from '$lib/icons/LockIcon.svelte';
   import { goto } from '$app/navigation';
+  import { dialogStore } from '$lib/stores/dialog-store.svelte';
+  import LoginFailedDialog from '$lib/components/dialogs/LoginFailedDialog.svelte';
 
+  let isLoading = $state(false);
   let email = $state('');
   let password = $state('');
 
   async function login(e: SubmitEvent) {
     e.preventDefault();
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
-    if (!error) {
+    isLoading = true;
+
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+
+    if (error) {
+      dialogStore.show(LoginFailedDialog, {}, { closeOnCorner: true });
+    } else {
       await goto('/dashboard');
     }
+    isLoading = false;
   }
 </script>
 
@@ -34,7 +43,13 @@
           placeholder="密碼"
         />
       </label>
-      <button type="submit" class="btn btn-outline btn-primary">登入</button>
+      <button type="submit" class="btn btn-outline btn-primary">
+        {#if isLoading}
+          <span class="loading loading-spinner">登入中</span>
+        {:else}
+          登入
+        {/if}
+      </button>
     </fieldset>
   </form>
 </div>

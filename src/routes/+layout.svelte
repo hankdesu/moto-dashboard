@@ -1,10 +1,11 @@
 <script lang="ts">
-	import '../app.css';
+  import Dialog from '$lib/components/Dialog.svelte';
+  import '../app.css';
 
-	let { children } = $props();
+  let { children } = $props();
 </script>
 
-<svelte:head>
-</svelte:head>
+<svelte:head></svelte:head>
 
 {@render children?.()}
+<Dialog />
